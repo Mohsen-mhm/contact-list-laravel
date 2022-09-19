@@ -3,23 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contact;
-use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ContactController extends Controller
 {
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
 
     /**
      * Display a listing of the resource.
@@ -28,8 +16,7 @@ class ContactController extends Controller
      */
     public function index(Request $request)
     {
-        $contacts = Contact::query();
-        $contacts = $contacts->where('user_id', $request->user()->id);
+        $contacts =  $request->user()->contacts();
 
         if ($keyword = request('search')) {
             $contacts->where('name', 'LIKE', "%{$keyword}%")->orWhere('email', 'LIKE', "%{$keyword}%");
@@ -60,9 +47,9 @@ class ContactController extends Controller
         $validData = $request->validate([
             'avatar' => ['required'],
             'name' => ['required', 'string'],
-            'email' => ['required', 'string'],
+            'email' => ['required', 'email'],
             'phone' => ['required', 'string'],
-            'gender' => ['required', 'string'],
+            'gender' => ['required', 'in:male,female'],
         ]);
 
         $validData['avatar'] = Storage::disk('public')->putFile('avatars', $validData['avatar']);
@@ -90,13 +77,13 @@ class ContactController extends Controller
      * @param int $id
      * @return \Illuminate\Routing\Redirector
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Contact $contact)
     {
         $validDate = $request->validate([
             'name' => ['required', 'string'],
-            'email' => ['required', 'string'],
+            'email' => ['required', 'email'],
             'phone' => ['required', 'string'],
-            'gender' => ['required', 'string'],
+            'gender' => ['required', 'in:male,female'],
         ]);
 
         if ($request->avatar) {
@@ -107,7 +94,7 @@ class ContactController extends Controller
             $validDate = array_merge($validDate, $imgValidated);
         }
 
-        Contact::find($id)->update($validDate);
+        $contact->update($validDate);
 
         return redirect('/');
     }

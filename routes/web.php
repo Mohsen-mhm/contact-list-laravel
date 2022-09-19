@@ -21,5 +21,5 @@ Route::get('/', function () {
     return redirect('/contacts');
 });
 
-Route::resource('/contacts', ContactController::class)->except('show');
+Route::resource('/contacts', ContactController::class)->except('show')->middleware(['auth']);
 
